@@ -5,8 +5,26 @@ export function formatMaybe(value: string | number | null | undefined) {
   return String(value)
 }
 
+function parseTimestamp(value: string) {
+  const sqliteUtcMatch =
+    /^(\d{4})-(\d{2})-(\d{2}) (\d{2}):(\d{2}):(\d{2})$/.exec(value)
+  if (sqliteUtcMatch) {
+    const [, year, month, day, hour, minute, second] = sqliteUtcMatch
+    const utcMillis = Date.UTC(
+      Number(year),
+      Number(month) - 1,
+      Number(day),
+      Number(hour),
+      Number(minute),
+      Number(second),
+    )
+    return new Date(utcMillis)
+  }
+  return new Date(value)
+}
+
 export function formatTimestamp(iso: string) {
-  const d = new Date(iso)
+  const d = parseTimestamp(iso)
   if (Number.isNaN(d.getTime())) return iso
   return d.toLocaleString('zh-CN', {
     month: '2-digit',
