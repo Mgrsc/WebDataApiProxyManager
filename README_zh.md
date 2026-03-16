@@ -95,7 +95,35 @@ http://<你的服务器IP>:8080
 * 代理 Exa： `/exa/...`
 * 代理 Tavily： `/tavily/...`
 * 代理 Firecrawl： `/firecrawl/...`
-* 代理 Jina： `/jina/...`
+* 代理 Jina Reader： `/jina/r/...`
+* 代理 Jina Search： `/jina/s/...`
+
+### Jina 路由映射说明
+
+Jina 的接入方式和 Exa、Tavily 这类常规 API 略有不同。WDAPM 会把 Jina 上游域名里的前缀映射到路径中：
+
+* `https://r.jina.ai/...` -> `/jina/r/...`
+* `https://s.jina.ai/...` -> `/jina/s/...`
+
+例如：
+
+```text
+原始上游请求：
+https://r.jina.ai/http://example.com
+
+通过 WDAPM：
+http://<你的服务器IP>:8080/jina/r/http://example.com
+```
+
+```text
+原始上游请求：
+https://s.jina.ai/http://example.com
+
+通过 WDAPM：
+http://<你的服务器IP>:8080/jina/s/http://example.com
+```
+
+> 注意：Jina 路由必须以 `r/` 或 `s/` 开头，像 `/jina/...` 这种未带前缀的写法是无效的。
 
 ---
 

@@ -99,7 +99,35 @@ Simply replace the original upstream Base URL with the WDAPM service address and
 * Proxy Exa: `/exa/...`
 * Proxy Tavily: `/tavily/...`
 * Proxy Firecrawl: `/firecrawl/...`
-* Proxy Jina: `/jina/...`
+* Proxy Jina Reader: `/jina/r/...`
+* Proxy Jina Search: `/jina/s/...`
+
+### Jina Route Mapping
+
+Jina is handled slightly differently from providers such as Exa or Tavily. WDAPM maps Jina's upstream host prefix into the route path:
+
+* `https://r.jina.ai/...` -> `/jina/r/...`
+* `https://s.jina.ai/...` -> `/jina/s/...`
+
+For example:
+
+```text
+Original upstream:
+https://r.jina.ai/http://example.com
+
+Via WDAPM:
+http://<Your-Server-IP>:8080/jina/r/http://example.com
+```
+
+```text
+Original upstream:
+https://s.jina.ai/http://example.com
+
+Via WDAPM:
+http://<Your-Server-IP>:8080/jina/s/http://example.com
+```
+
+> Note: Jina routes must start with `r/` or `s/`. Requests like `/jina/...` without that prefix are invalid.
 
 ---
 
