@@ -9,7 +9,6 @@ export function ProxiesTable({
   editingId,
   editName,
   editProxyUrl,
-  editRegion,
   updatePending,
   togglePending,
   testingId,
@@ -19,7 +18,6 @@ export function ProxiesTable({
   testError,
   onEditNameChange,
   onEditProxyUrlChange,
-  onEditRegionChange,
   onSaveEdit,
   onCancelEdit,
   onStartEdit,
@@ -33,7 +31,6 @@ export function ProxiesTable({
   editingId: string | null
   editName: string
   editProxyUrl: string
-  editRegion: string
   updatePending: boolean
   togglePending: boolean
   testingId: string | null
@@ -43,7 +40,6 @@ export function ProxiesTable({
   testError?: string
   onEditNameChange: (value: string) => void
   onEditProxyUrlChange: (value: string) => void
-  onEditRegionChange: (value: string) => void
   onSaveEdit: (proxyId: string) => void
   onCancelEdit: () => void
   onStartEdit: (proxy: EgressProxySummary) => void
@@ -63,7 +59,6 @@ export function ProxiesTable({
                 <th>{t('table.name')}</th>
                 <th>{t('table.kind')}</th>
                 <th>{t('table.status')}</th>
-                <th>{t('proxies.region_optional').replace(/\s*\(.*\)/, '')}</th>
                 <th>{t('table.failures')}</th>
                 <th>{t('table.target')}</th>
                 <th>{t('table.actions')}</th>
@@ -77,14 +72,12 @@ export function ProxiesTable({
                   editingId={editingId}
                   editName={editName}
                   editProxyUrl={editProxyUrl}
-                  editRegion={editRegion}
                   updatePending={updatePending}
                   togglePending={togglePending}
                   testingId={testingId}
                   testResult={testResults[proxy.id]}
                   onEditNameChange={onEditNameChange}
                   onEditProxyUrlChange={onEditProxyUrlChange}
-                  onEditRegionChange={onEditRegionChange}
                   onSaveEdit={onSaveEdit}
                   onCancelEdit={onCancelEdit}
                   onStartEdit={onStartEdit}

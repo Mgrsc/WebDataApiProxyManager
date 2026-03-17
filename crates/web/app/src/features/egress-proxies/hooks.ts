@@ -13,18 +13,15 @@ export function useEgressProxiesStateAndMutations({
   const [drawerOpen, setDrawerOpen] = useState(false)
   const [name, setName] = useState('')
   const [proxyUrl, setProxyUrl] = useState('')
-  const [region, setRegion] = useState('')
   const [editingId, setEditingId] = useState<string | null>(null)
   const [editName, setEditName] = useState('')
   const [editProxyUrl, setEditProxyUrl] = useState('')
-  const [editRegion, setEditRegion] = useState('')
   const [testingId, setTestingId] = useState<string | null>(null)
   const [testResults, setTestResults] = useState<Record<string, EgressProxyTestResult>>({})
 
   const resetCreateForm = () => {
     setName('')
     setProxyUrl('')
-    setRegion('')
     setDrawerOpen(false)
   }
 
@@ -32,7 +29,6 @@ export function useEgressProxiesStateAndMutations({
     setEditingId(null)
     setEditName('')
     setEditProxyUrl('')
-    setEditRegion('')
   }
 
   const createMutation = useMutation({
@@ -40,7 +36,6 @@ export function useEgressProxiesStateAndMutations({
       adminApi.createEgressProxy(token, {
         name,
         proxy_url: proxyUrl,
-        region: region || undefined,
         enabled: true,
       }),
     onSuccess: async () => {
@@ -54,19 +49,12 @@ export function useEgressProxiesStateAndMutations({
       const payload: {
         name?: string
         proxy_url?: string
-        region?: string
-        clear_region?: boolean
       } = {}
       if (editName.trim()) {
         payload.name = editName.trim()
       }
       if (editProxyUrl.trim()) {
         payload.proxy_url = editProxyUrl.trim()
-      }
-      if (editRegion.trim()) {
-        payload.region = editRegion.trim()
-      } else {
-        payload.clear_region = true
       }
       return adminApi.updateEgressProxy(token, proxyId, payload)
     },
@@ -101,18 +89,15 @@ export function useEgressProxiesStateAndMutations({
     setEditingId(proxy.id)
     setEditName(proxy.name)
     setEditProxyUrl(proxy.proxy_url)
-    setEditRegion(proxy.region ?? '')
   }
 
   return {
     drawerOpen,
     name,
     proxyUrl,
-    region,
     editingId,
     editName,
     editProxyUrl,
-    editRegion,
     testingId,
     testResults,
     createMutation,
@@ -122,10 +107,8 @@ export function useEgressProxiesStateAndMutations({
     setDrawerOpen,
     setName,
     setProxyUrl,
-    setRegion,
     setEditName,
     setEditProxyUrl,
-    setEditRegion,
     resetEditForm,
     handleStartEdit,
     onCreate: () => void createMutation.mutateAsync(),

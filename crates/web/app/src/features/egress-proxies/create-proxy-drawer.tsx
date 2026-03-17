@@ -5,12 +5,10 @@ export function CreateProxyDrawer({
   onClose,
   name,
   proxyUrl,
-  region,
   createPending,
   createError,
   onNameChange,
   onProxyUrlChange,
-  onRegionChange,
   onCreate,
   t,
 }: {
@@ -18,12 +16,10 @@ export function CreateProxyDrawer({
   onClose: () => void
   name: string
   proxyUrl: string
-  region: string
   createPending: boolean
   createError?: string
   onNameChange: (value: string) => void
   onProxyUrlChange: (value: string) => void
-  onRegionChange: (value: string) => void
   onCreate: () => void
   t: (key: string, values?: Record<string, string | number>) => string
 }) {
@@ -45,14 +41,6 @@ export function CreateProxyDrawer({
             value={proxyUrl}
             onChange={(event) => onProxyUrlChange(event.target.value)}
             placeholder="socks5://127.0.0.1:1080"
-          />
-        </label>
-        <label className="field">
-          <span>{t('proxies.region_optional')}</span>
-          <input
-            value={region}
-            onChange={(event) => onRegionChange(event.target.value)}
-            placeholder="e.g. us-west"
           />
         </label>
         {createError ? <ErrorBanner message={createError} /> : null}

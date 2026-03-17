@@ -44,12 +44,10 @@ export function EgressProxiesPage() {
         onClose={() => state.setDrawerOpen(false)}
         name={state.name}
         proxyUrl={state.proxyUrl}
-        region={state.region}
         createPending={state.createMutation.isPending}
         createError={state.createMutation.error?.message}
         onNameChange={state.setName}
         onProxyUrlChange={state.setProxyUrl}
-        onRegionChange={state.setRegion}
         onCreate={state.onCreate}
         t={t}
       />
@@ -61,7 +59,6 @@ export function EgressProxiesPage() {
         editingId={state.editingId}
         editName={state.editName}
         editProxyUrl={state.editProxyUrl}
-        editRegion={state.editRegion}
         updatePending={state.updateMutation.isPending}
         togglePending={state.toggleMutation.isPending}
         testingId={state.testingId}
@@ -71,7 +68,6 @@ export function EgressProxiesPage() {
         testError={state.testMutation.error?.message}
         onEditNameChange={state.setEditName}
         onEditProxyUrlChange={state.setEditProxyUrl}
-        onEditRegionChange={state.setEditRegion}
         onSaveEdit={state.onSaveEdit}
         onCancelEdit={state.resetEditForm}
         onStartEdit={state.handleStartEdit}

@@ -1,7 +1,3 @@
-.proxy-region-input {
-  width: 100px;
-}
-
 .proxy-target-cell {
   min-width: 0;
 }
@@ -14,8 +10,8 @@
 .proxy-target-value,
 .proxy-test-feedback {
   display: block;
-  width: clamp(180px, 32vw, 320px);
-  max-width: 320px;
+  width: clamp(120px, 20vw, 220px);
+  max-width: 220px;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;

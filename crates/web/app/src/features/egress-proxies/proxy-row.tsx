@@ -3,7 +3,6 @@ import {
   ActionDropdown,
   StatusBadge,
   formatManagedStatus,
-  formatMaybe,
   toneFromStatus,
 } from '../../ui/shared'
 
@@ -12,14 +11,12 @@ export function EgressProxyRow({
   editingId,
   editName,
   editProxyUrl,
-  editRegion,
   updatePending,
   togglePending,
   testingId,
   testResult,
   onEditNameChange,
   onEditProxyUrlChange,
-  onEditRegionChange,
   onSaveEdit,
   onCancelEdit,
   onStartEdit,
@@ -31,14 +28,12 @@ export function EgressProxyRow({
   editingId: string | null
   editName: string
   editProxyUrl: string
-  editRegion: string
   updatePending: boolean
   togglePending: boolean
   testingId: string | null
   testResult?: EgressProxyTestResult
   onEditNameChange: (value: string) => void
   onEditProxyUrlChange: (value: string) => void
-  onEditRegionChange: (value: string) => void
   onSaveEdit: (proxyId: string) => void
   onCancelEdit: () => void
   onStartEdit: (proxy: EgressProxySummary) => void
@@ -48,6 +43,7 @@ export function EgressProxyRow({
 }) {
   const isEditing = editingId === proxy.id
   const isTesting = testingId === proxy.id
+  const compactTarget = summarizeProxyTarget(proxy.proxy_url)
   const testLabel = testResult
     ? [
         testResult.ok ? t('proxies.test_success') : t('proxies.test_failed'),
@@ -86,18 +82,6 @@ export function EgressProxyRow({
           {formatManagedStatus(proxy.status, t)}
         </StatusBadge>
       </td>
-      <td>
-        {isEditing ? (
-          <input
-            value={editRegion}
-            onChange={(event) => onEditRegionChange(event.target.value)}
-            placeholder="e.g. us-west"
-            className="proxy-region-input"
-          />
-        ) : (
-          formatMaybe(proxy.region)
-        )}
-      </td>
       <td>{proxy.consecutive_failures}</td>
       <td className="mono-cell proxy-target-cell">
         {isEditing ? (
@@ -109,7 +93,7 @@ export function EgressProxyRow({
         ) : (
           <div className="proxy-target-stack">
             <span className="proxy-target-value" title={proxy.proxy_url}>
-              {proxy.proxy_url}
+              {compactTarget}
             </span>
             {isTesting ? (
               <span className="proxy-test-feedback">{t('common.testing')}</span>
@@ -163,4 +147,13 @@ export function EgressProxyRow({
       </td>
     </tr>
   )
+}
+
+function summarizeProxyTarget(value: string) {
+  try {
+    const parsed = new URL(value)
+    return `${parsed.protocol}//${parsed.host}`
+  } catch {
+    return value
+  }
 }
