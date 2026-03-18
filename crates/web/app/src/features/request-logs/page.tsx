@@ -24,9 +24,10 @@ export function RequestLogsPage() {
   const [apiKeyName, setApiKeyName] = useState('')
   const [limit, setLimit] = useState('100')
   const [appliedFilters, setAppliedFilters] = useState<RequestLogFilters>({ limit: 100 })
+  const [refreshVersion, setRefreshVersion] = useState(0)
 
   const logsQuery = useQuery({
-    queryKey: ['request-logs', token, appliedFilters],
+    queryKey: ['request-logs', token, appliedFilters, refreshVersion],
     queryFn: () => adminApi.listRequestLogs(token, appliedFilters),
   })
 
@@ -43,6 +44,7 @@ export function RequestLogsPage() {
         limit,
       }),
     )
+    setRefreshVersion((value) => value + 1)
   }
 
   if (logsQuery.isLoading) return <Spinner />
