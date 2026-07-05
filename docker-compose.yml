@@ -1,14 +1,24 @@
 services:
   wdapm:
-    image: ghcr.io/mgrsc/webdataapiproxymanager:latest
+    image: ghcr.io/wslzgmzs/webdataapiproxymanager:latest
+    container_name: webdataapiproxymanager
     ports:
-      - "8080:3000"
+      - "5887:3000"
     init: true
     env_file:
       - .env
     volumes:
       - wdapm-data:/data
     restart: unless-stopped
+    networks:
+      - wdapm-net
 
 volumes:
   wdapm-data:
+    name: wdapm-data
+    driver: local
+
+networks:
+  wdapm-net:
+    name: wdapm-net
+    driver: bridge
