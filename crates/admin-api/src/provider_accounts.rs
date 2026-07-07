@@ -15,8 +15,11 @@ async fn create_provider_account(
 ) -> Result<(StatusCode, Json<ProviderAccountSummary>), AdminApiError> {
     let admin_identity = authorize_with_identity(&headers, &state.storage).await?;
     let name = require_non_empty(payload.name.as_str(), "provider account name is required")?;
-    let api_key =
-        require_non_empty(payload.api_key.as_str(), "provider account api key is required")?;
+    let api_key = normalize_provider_account_api_key(
+        payload.provider,
+        payload.api_key.as_str(),
+        "provider account api key is required",
+    )?;
     let account = ProviderAccount {
         id: payload
             .id
@@ -80,10 +83,21 @@ async fn update_provider_account(
         payload.name.as_ref(),
         "provider account name cannot be empty",
     )?;
-    let api_key = optional_non_empty(
-        payload.api_key.as_ref(),
-        "provider account api key cannot be empty",
-    )?;
+    let api_key = match payload.api_key.as_ref() {
+        Some(value) => {
+            let account = state
+                .storage
+                .find_provider_account(&account_id)
+                .await?
+                .ok_or_else(|| AdminApiError::NotFound(account_id.clone()))?;
+            Some(normalize_provider_account_api_key(
+                account.provider,
+                value.as_str(),
+                "provider account api key cannot be empty",
+            )?)
+        }
+        None => None,
+    };
     let base_url = if payload.clear_base_url.unwrap_or(false) {
         Some(None)
     } else {
@@ -249,4 +263,50 @@ async fn bind_provider_account_proxy(
     .await;
 
     Ok(StatusCode::NO_CONTENT)
+}
+
+fn normalize_provider_account_api_key(
+    provider: ProviderId,
+    value: &str,
+    message: &str,
+) -> Result<String, AdminApiError> {
+    let value = value.trim();
+    if value.is_empty() {
+        if provider == ProviderId::Jina {
+            Ok(String::new())
+        } else {
+            Err(AdminApiError::BadRequest(message.to_owned()))
+        }
+    } else {
+        Ok(value.to_owned())
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn allows_blank_jina_api_key() {
+        let value = normalize_provider_account_api_key(
+            ProviderId::Jina,
+            "   ",
+            "provider account api key is required",
+        )
+        .expect("jina keyless account should be allowed");
+
+        assert_eq!(value, "");
+    }
+
+    #[test]
+    fn rejects_blank_non_jina_api_key() {
+        let error = normalize_provider_account_api_key(
+            ProviderId::Exa,
+            "   ",
+            "provider account api key is required",
+        )
+        .expect_err("non-jina keyless account should be rejected");
+
+        assert!(matches!(error, AdminApiError::BadRequest(_)));
+    }
 }

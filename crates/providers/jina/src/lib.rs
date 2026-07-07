@@ -5,6 +5,9 @@ use wdapm_core::{
     ProviderResponseClass, ProviderRoute, RequestEnvelope, UpstreamRequestPlan, join_url,
 };
 
+const JINA_READER_BASE_URL: &str = "https://r.jina.ai";
+const JINA_SEARCH_BASE_URL: &str = "https://s.jina.ai";
+
 pub fn adapter() -> Arc<dyn ProviderAdapter> {
     Arc::new(JinaAdapter)
 }
@@ -24,12 +27,12 @@ impl ProviderAdapter for JinaAdapter {
         let trimmed = rest_path.trim_matches('/');
         let (base_url_override, upstream_path) = if let Some(target) = trimmed.strip_prefix("r/") {
             (
-                "https://r.jina.ai".to_owned(),
+                JINA_READER_BASE_URL.to_owned(),
                 format!("/{}", target.trim_start_matches('/')),
             )
         } else if let Some(target) = trimmed.strip_prefix("s/") {
             (
-                "https://s.jina.ai".to_owned(),
+                JINA_SEARCH_BASE_URL.to_owned(),
                 format!("/{}", target.trim_start_matches('/')),
             )
         } else {
@@ -74,12 +77,75 @@ impl ProviderAdapter for JinaAdapter {
         })
     }
 
+    fn supports_account_for_route(&self, route: &ProviderRoute, account: &ProviderAccount) -> bool {
+        !account.api_key.trim().is_empty()
+            || route.base_url_override.as_deref() == Some(JINA_READER_BASE_URL)
+    }
+
     fn classify_response(&self, status: u16) -> ProviderResponseClass {
         match status {
             401 | 403 => ProviderResponseClass::disable_account(),
             429 => ProviderResponseClass::cooldown(),
             500..=599 => ProviderResponseClass::retryable(),
             _ => ProviderResponseClass::passthrough(),
+        }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use wdapm_core::ProviderAccountStatus;
+
+    #[test]
+    fn keyless_account_supports_reader_route() {
+        let adapter = JinaAdapter;
+        let route = adapter
+            .parse_route("r/https://example.com", None)
+            .expect("reader route should parse");
+        let account = provider_account("");
+
+        assert!(adapter.supports_account_for_route(&route, &account));
+    }
+
+    #[test]
+    fn keyless_account_does_not_support_search_route() {
+        let adapter = JinaAdapter;
+        let route = adapter
+            .parse_route("s/search", Some("q=example"))
+            .expect("search route should parse");
+        let account = provider_account("");
+
+        assert!(!adapter.supports_account_for_route(&route, &account));
+    }
+
+    #[test]
+    fn keyed_account_supports_search_route() {
+        let adapter = JinaAdapter;
+        let route = adapter
+            .parse_route("s/search", Some("q=example"))
+            .expect("search route should parse");
+        let account = provider_account("jina_test");
+
+        assert!(adapter.supports_account_for_route(&route, &account));
+    }
+
+    fn provider_account(api_key: &str) -> ProviderAccount {
+        ProviderAccount {
+            id: "jina-test".to_owned(),
+            provider: ProviderId::Jina,
+            name: "Jina Test".to_owned(),
+            api_key: api_key.to_owned(),
+            base_url: None,
+            enabled: true,
+            status: ProviderAccountStatus::Active,
+            last_error: None,
+            cooldown_until: None,
+            last_used_at: None,
+            consecutive_failures: 0,
+            last_status_code: None,
+            weight: 100,
+            last_failure_at: None,
         }
     }
 }

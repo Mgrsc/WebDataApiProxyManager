@@ -299,10 +299,15 @@ async fn proxy_request(
     let pinned_async_route =
         resolve_pinned_async_route(&state, provider_id, &method, route.upstream_path.as_str())
             .await?;
+    let route_incompatible_account_ids = if pinned_async_route.is_some() {
+        Vec::new()
+    } else {
+        route_incompatible_account_ids(&state, adapter.as_ref(), provider_id, &route).await?
+    };
 
     let max_retries = state.scheduler.config().max_retries;
     let using_pinned_async_route = pinned_async_route.is_some();
-    let mut excluded_account_ids: Vec<String> = Vec::new();
+    let mut excluded_account_ids = route_incompatible_account_ids;
     let mut excluded_routes: Vec<RouteRetryExclusion> = Vec::new();
     let mut last_error: Option<GatewayError> = None;
     let mut last_retryable_response: Option<DeferredRetryableResponse> = None;
@@ -652,6 +657,115 @@ async fn proxy_request(
     Err(last_error.unwrap_or_else(|| GatewayError::ProviderUnavailable(provider_id)))
 }
 
+async fn route_incompatible_account_ids(
+    state: &GatewayState,
+    adapter: &dyn ProviderAdapter,
+    provider_id: ProviderId,
+    route: &wdapm_core::ProviderRoute,
+) -> Result<Vec<String>, GatewayError> {
+    let accounts = state
+        .storage
+        .list_routable_provider_accounts(provider_id)
+        .await?;
+    Ok(route_incompatible_account_ids_from_accounts(
+        accounts, adapter, route,
+    ))
+}
+
+fn route_incompatible_account_ids_from_accounts(
+    accounts: Vec<ProviderAccount>,
+    adapter: &dyn ProviderAdapter,
+    route: &wdapm_core::ProviderRoute,
+) -> Vec<String> {
+    accounts
+        .into_iter()
+        .filter(|account| !adapter.supports_account_for_route(route, account))
+        .map(|account| account.id)
+        .collect()
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use wdapm_core::ProviderAccountStatus;
+
+    #[test]
+    fn route_incompatible_account_ids_excludes_unsupported_accounts() {
+        let adapter = RejectKeylessAdapter;
+        let route = wdapm_core::ProviderRoute {
+            base_url_override: None,
+            upstream_path: "/test".to_owned(),
+            query: None,
+        };
+        let account_ids = route_incompatible_account_ids_from_accounts(
+            vec![
+                provider_account("blank", ""),
+                provider_account("keyed", "secret"),
+            ],
+            &adapter,
+            &route,
+        );
+
+        assert_eq!(account_ids, vec!["blank"]);
+    }
+
+    struct RejectKeylessAdapter;
+
+    impl ProviderAdapter for RejectKeylessAdapter {
+        fn provider_id(&self) -> ProviderId {
+            ProviderId::Jina
+        }
+
+        fn parse_route(
+            &self,
+            _rest_path: &str,
+            _query: Option<&str>,
+        ) -> Result<wdapm_core::ProviderRoute, ProviderError> {
+            unreachable!()
+        }
+
+        fn build_upstream_request(
+            &self,
+            _request: &RequestEnvelope,
+            _route: &wdapm_core::ProviderRoute,
+            _account: &ProviderAccount,
+        ) -> Result<UpstreamRequestPlan, ProviderError> {
+            unreachable!()
+        }
+
+        fn supports_account_for_route(
+            &self,
+            _route: &wdapm_core::ProviderRoute,
+            account: &ProviderAccount,
+        ) -> bool {
+            !account.api_key.is_empty()
+        }
+
+        fn classify_response(&self, _status: u16) -> ProviderResponseClass {
+            ProviderResponseClass::passthrough()
+        }
+    }
+
+    fn provider_account(id: &str, api_key: &str) -> ProviderAccount {
+        ProviderAccount {
+            id: id.to_owned(),
+            provider: ProviderId::Jina,
+            name: id.to_owned(),
+            api_key: api_key.to_owned(),
+            base_url: None,
+            enabled: true,
+            status: ProviderAccountStatus::Active,
+            last_error: None,
+            cooldown_until: None,
+            last_used_at: None,
+            consecutive_failures: 0,
+            last_status_code: None,
+            weight: 100,
+            last_failure_at: None,
+        }
+    }
+}
+
 async fn resolve_pinned_async_route(
     state: &GatewayState,
     provider_id: ProviderId,
@@ -883,6 +997,8 @@ pub enum GatewayError {
     Provider(#[from] ProviderError),
     #[error(transparent)]
     Scheduler(#[from] wdapm_scheduler::SchedulerError),
+    #[error(transparent)]
+    Storage(#[from] wdapm_storage::StorageError),
     #[error("gateway client pool is poisoned")]
     ClientPoolPoisoned,
     #[error(transparent)]
@@ -915,6 +1031,7 @@ impl IntoResponse for GatewayError {
             Self::ClientPoolPoisoned
             | Self::Http(_)
             | Self::ResponseBuild(_)
+            | Self::Storage(_)
             | Self::WebhookStorage(_) => {
                 error!(error = %self, "gateway internal error");
                 (

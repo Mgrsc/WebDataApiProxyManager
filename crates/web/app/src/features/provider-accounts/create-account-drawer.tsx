@@ -53,6 +53,9 @@ export function CreateAccountDrawer({
   onBulkCreate: () => void
   t: (key: string, values?: Record<string, string | number>) => string
 }) {
+  const apiKeyOptional = provider === 'jina'
+  const canCreate = Boolean(name.trim()) && (Boolean(apiKeyInput.trim()) || apiKeyOptional)
+
   return (
     <Drawer open={open} onClose={onClose} title={t('accounts.create')}>
       <p className="panel-copy">{t('accounts.create_desc')}</p>
@@ -85,7 +88,11 @@ export function CreateAccountDrawer({
             value={apiKeyInput}
             onChange={(event) => onApiKeyChange(event.target.value)}
           />
-          <p className="field-note">{t('accounts.api_key_prefix_examples')}</p>
+          <p className="field-note">
+            {apiKeyOptional
+              ? t('accounts.api_key_optional_jina')
+              : t('accounts.api_key_prefix_examples')}
+          </p>
         </label>
         <label className="field">
           <span>{t('accounts.batch_api_keys')}</span>
@@ -110,7 +117,7 @@ export function CreateAccountDrawer({
         <button
           type="button"
           className="primary-button"
-          disabled={createPending || bulkPending || !name.trim() || !apiKeyInput.trim()}
+          disabled={createPending || bulkPending || !canCreate}
           onClick={onCreate}
         >
           {createPending ? t('common.creating') : t('common.add_account')}

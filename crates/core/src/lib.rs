@@ -627,6 +627,13 @@ pub trait ProviderAdapter: Send + Sync {
         route: &ProviderRoute,
         account: &ProviderAccount,
     ) -> Result<UpstreamRequestPlan, ProviderError>;
+    fn supports_account_for_route(
+        &self,
+        _route: &ProviderRoute,
+        _account: &ProviderAccount,
+    ) -> bool {
+        true
+    }
     fn classify_response(&self, status: u16) -> ProviderResponseClass;
 }
 

@@ -251,6 +251,7 @@ fn classify_gateway_failure(error: &GatewayError) -> &'static str {
         GatewayError::Provider(_) => "provider",
         GatewayError::Scheduler(_) => "scheduler",
         GatewayError::ResponseBuild(_) => "response_build",
+        GatewayError::Storage(_) => "storage",
         GatewayError::WebhookStorage(_) => "storage",
         GatewayError::ClientPoolPoisoned => "client_pool",
         GatewayError::ProviderUnavailable(_) => "provider_unavailable",

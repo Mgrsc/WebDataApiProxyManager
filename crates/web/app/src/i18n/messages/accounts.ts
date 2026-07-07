@@ -12,6 +12,7 @@ export const accountsMessages = {
   'accounts.provider_auto_detected': { en: 'Auto-detected from API key prefix', zh: '已根据 API Key 前缀自动识别' },
   'accounts.provider_manual_select': { en: 'No known prefix, please select provider manually.', zh: '未识别到前缀，请手动选择 Provider。' },
   'accounts.api_key_prefix_examples': { en: 'Examples: tvly-..., fc-..., jina_...', zh: '示例：tvly-...、fc-...、jina_...' },
+  'accounts.api_key_optional_jina': { en: 'Optional for Jina Reader (/jina/r). Jina Search (/jina/s) still requires an API key.', zh: 'Jina Reader（/jina/r）可留空；Jina Search（/jina/s）仍需要 API Key。' },
   'accounts.batch_api_keys': { en: 'Batch API Keys', zh: '批量 API Key' },
   'accounts.batch_api_keys_placeholder': { en: 'One API key per line', zh: '每行一个 API Key' },
   'accounts.batch_hint': { en: 'Supports mixed providers and auto detection by prefix.', zh: '支持混合 Provider，按前缀自动识别。' },
