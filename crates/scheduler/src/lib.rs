@@ -108,7 +108,7 @@ impl SchedulerService {
                 (score, i)
             })
             .collect();
-        scored.sort_by(|a, b| b.0.cmp(&a.0));
+        scored.sort_by_key(|item| std::cmp::Reverse(item.0));
 
         let mut candidate_indices: Vec<usize> = scored.iter().map(|(_, i)| *i).collect();
         if let Some((top_score, _)) = scored.first() {

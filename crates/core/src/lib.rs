@@ -702,8 +702,10 @@ pub fn sqlite_timestamp(value: OffsetDateTime) -> String {
 }
 
 pub fn parse_sqlite_timestamp(value: &str) -> Option<OffsetDateTime> {
-    let format =
-        time::format_description::parse("[year]-[month]-[day] [hour]:[minute]:[second]").ok()?;
+    let format = time::format_description::parse_borrowed::<3>(
+        "[year]-[month]-[day] [hour]:[minute]:[second]",
+    )
+    .ok()?;
     time::PrimitiveDateTime::parse(value, &format)
         .ok()
         .map(|dt| dt.assume_utc())
