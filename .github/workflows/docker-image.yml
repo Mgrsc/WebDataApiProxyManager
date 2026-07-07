@@ -1,18 +1,18 @@
 name: Publish Docker Image
- 
+
 on:
   push:
     branches:
       - main
   workflow_dispatch:
- 
+
 concurrency:
   group: docker-image-${{ github.ref }}
   cancel-in-progress: true
- 
+
 env:
-  IMAGE_NAME: ghcr.io/${{ github.repository_owner }}/${{ github.event.repository.name }}
- 
+  IMAGE_NAME_RAW: ghcr.io/${{ github.repository_owner }}/${{ github.event.repository.name }}
+
 jobs:
   build:
     strategy:
@@ -31,17 +31,23 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v6.0.2
- 
+
+      - name: Generate lowercase image name
+        id: image-name
+        run: echo "name=${IMAGE_NAME_RAW,,}" >> "$GITHUB_OUTPUT"
+        env:
+          IMAGE_NAME_RAW: ${{ env.IMAGE_NAME_RAW }}
+
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v4.0.0
- 
+
       - name: Log in to GitHub Container Registry
         uses: docker/login-action@v4.0.0
         with:
           registry: ghcr.io
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
- 
+
       - name: Build and push by digest
         id: build
         uses: docker/build-push-action@v7.0.0
@@ -49,16 +55,16 @@ jobs:
           context: .
           file: ./Dockerfile
           platforms: ${{ matrix.platform }}
-          outputs: type=image,name=${{ env.IMAGE_NAME }},push-by-digest=true,name-canonical=true,push=true
+          outputs: type=image,name=${{ steps.image-name.outputs.name }},push-by-digest=true,name-canonical=true,push=true
           cache-from: type=gha,scope=${{ matrix.platform }}
           cache-to: type=gha,mode=max,scope=${{ matrix.platform }}
- 
+
       - name: Export digest
         run: |
           mkdir -p /tmp/digests
           digest="${{ steps.build.outputs.digest }}"
           touch "/tmp/digests/${digest#sha256:}"
- 
+
       - name: Upload digest
         uses: actions/upload-artifact@v4
         with:
@@ -66,7 +72,7 @@ jobs:
           path: /tmp/digests/*
           if-no-files-found: error
           retention-days: 1
- 
+
   merge:
     runs-on: ubuntu-latest
     needs: build
@@ -80,24 +86,30 @@ jobs:
           path: /tmp/digests
           pattern: digests-*
           merge-multiple: true
- 
+
+      - name: Generate lowercase image name
+        id: image-name
+        run: echo "name=${IMAGE_NAME_RAW,,}" >> "$GITHUB_OUTPUT"
+        env:
+          IMAGE_NAME_RAW: ${{ env.IMAGE_NAME_RAW }}
+
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v4.0.0
- 
+
       - name: Log in to GitHub Container Registry
         uses: docker/login-action@v4.0.0
         with:
           registry: ghcr.io
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
- 
+
       - name: Create manifest list and push
         working-directory: /tmp/digests
         run: |
           docker buildx imagetools create \
-            -t ${{ env.IMAGE_NAME }}:latest \
-            -t ${{ env.IMAGE_NAME }}:${{ github.sha }} \
-            $(printf '${{ env.IMAGE_NAME }}@sha256:%s ' *)
- 
+            -t ${{ steps.image-name.outputs.name }}:latest \
+            -t ${{ steps.image-name.outputs.name }}:${{ github.sha }} \
+            $(printf '${{ steps.image-name.outputs.name }}@sha256:%s ' *)
+
       - name: Inspect image
-        run: docker buildx imagetools inspect ${{ env.IMAGE_NAME }}:latest
+        run: docker buildx imagetools inspect ${{ steps.image-name.outputs.name }}:latest
