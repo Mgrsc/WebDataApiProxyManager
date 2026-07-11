@@ -112,7 +112,7 @@
   border: 3px solid var(--border-strong);
   border-radius: var(--radius-sm);
   box-shadow: 4px 4px 0px var(--border);
-  z-index: 40;
+  z-index: 210;
 }
 
 .custom-select-option {
