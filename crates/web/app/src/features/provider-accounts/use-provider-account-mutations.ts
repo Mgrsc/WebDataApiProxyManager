@@ -12,9 +12,14 @@ export function useProviderAccountMutations({
   name,
   apiKeyInput,
   baseUrl,
+  readerBaseUrl,
+  searchBaseUrl,
   batchApiKeys,
   editName,
   editBaseUrl,
+  editReaderBaseUrl,
+  editSearchBaseUrl,
+  editApiKey,
   bindSelections,
   selectedIds,
   bulkProxyId,
@@ -30,9 +35,14 @@ export function useProviderAccountMutations({
   name: string
   apiKeyInput: string
   baseUrl: string
+  readerBaseUrl: string
+  searchBaseUrl: string
   batchApiKeys: string[]
   editName: string
   editBaseUrl: string
+  editReaderBaseUrl: string
+  editSearchBaseUrl: string
+  editApiKey: string
   bindSelections: Record<string, string>
   selectedIds: string[]
   bulkProxyId: string
@@ -51,6 +61,8 @@ export function useProviderAccountMutations({
         name,
         api_key: apiKeyInput,
         base_url: baseUrl || undefined,
+        reader_base_url: provider === 'jina' ? readerBaseUrl || undefined : undefined,
+        search_base_url: provider === 'jina' ? searchBaseUrl || undefined : undefined,
         enabled: true,
       }),
     onSuccess: async () => {
@@ -66,6 +78,12 @@ export function useProviderAccountMutations({
       }
 
       const usedNames = new Set<string>()
+      const resolvedProviders = new Set(
+        batchApiKeys.map((apiKey) => detectProviderFromApiKey(apiKey) ?? provider),
+      )
+      if (resolvedProviders.size > 1 && (baseUrl || readerBaseUrl || searchBaseUrl)) {
+        throw new Error(t('accounts.batch_mixed_base_url'))
+      }
       let createdCount = 0
       const failures: string[] = []
       for (const [index, apiKey] of batchApiKeys.entries()) {
@@ -81,6 +99,9 @@ export function useProviderAccountMutations({
             provider: resolvedProvider,
             name: generatedName,
             api_key: apiKey,
+            base_url: resolvedProvider === 'jina' ? undefined : baseUrl || undefined,
+            reader_base_url: resolvedProvider === 'jina' ? readerBaseUrl || undefined : undefined,
+            search_base_url: resolvedProvider === 'jina' ? searchBaseUrl || undefined : undefined,
             enabled: true,
           })
           createdCount += 1
@@ -191,15 +212,27 @@ export function useProviderAccountMutations({
         name?: string
         base_url?: string
         clear_base_url?: boolean
+        api_key?: string
+        reader_base_url?: string
+        clear_reader_base_url?: boolean
+        search_base_url?: string
+        clear_search_base_url?: boolean
       } = {}
       if (editName.trim()) {
         payload.name = editName.trim()
+      }
+      if (editApiKey.trim()) {
+        payload.api_key = editApiKey.trim()
       }
       if (editBaseUrl.trim()) {
         payload.base_url = editBaseUrl.trim()
       } else {
         payload.clear_base_url = true
       }
+      if (editReaderBaseUrl.trim()) payload.reader_base_url = editReaderBaseUrl.trim()
+      else payload.clear_reader_base_url = true
+      if (editSearchBaseUrl.trim()) payload.search_base_url = editSearchBaseUrl.trim()
+      else payload.clear_search_base_url = true
       return adminApi.updateProviderAccount(token, accountId, payload)
     },
     onSuccess: async () => {

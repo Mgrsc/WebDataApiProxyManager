@@ -60,6 +60,7 @@ impl ProviderAdapter for FirecrawlAdapter {
                 route.query.as_deref(),
             ),
             auth: firecrawl_auth(account),
+            body_override: None,
         })
     }
 
@@ -257,6 +258,8 @@ mod tests {
             name: "Firecrawl Test".to_owned(),
             api_key: api_key.to_owned(),
             base_url: None,
+            reader_base_url: None,
+            search_base_url: None,
             enabled: true,
             status: ProviderAccountStatus::Active,
             last_error: None,

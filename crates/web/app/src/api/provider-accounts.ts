@@ -12,6 +12,8 @@ export const providerAccountsApi = {
       name: string
       api_key: string
       base_url?: string
+      reader_base_url?: string
+      search_base_url?: string
       enabled?: boolean
     },
   ) {
@@ -36,7 +38,17 @@ export const providerAccountsApi = {
   updateProviderAccount(
     token: string,
     accountId: string,
-    payload: { name?: string; api_key?: string; base_url?: string; clear_base_url?: boolean; enabled?: boolean },
+    payload: {
+      name?: string
+      api_key?: string
+      base_url?: string
+      clear_base_url?: boolean
+      reader_base_url?: string
+      clear_reader_base_url?: boolean
+      search_base_url?: string
+      clear_search_base_url?: boolean
+      enabled?: boolean
+    },
   ) {
     return request<ProviderAccountSummary>(`/provider-accounts/${accountId}`, {
       method: 'PATCH',

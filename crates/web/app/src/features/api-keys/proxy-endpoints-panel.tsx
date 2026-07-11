@@ -50,6 +50,12 @@ export function ProxyEndpointsPanel({
     ? t('api_keys.endpoints_desc', { origin: normalizedOrigin })
     : t('api_keys.endpoints_desc_fallback')
   const routeEntries = buildRouteEntries(normalizedOrigin, selectedProvider)
+  const authenticationHint = {
+    exa: 'api_keys.endpoints_hint_exa',
+    tavily: 'api_keys.endpoints_hint_tavily',
+    firecrawl: 'api_keys.endpoints_hint_bearer',
+    jina: 'api_keys.endpoints_hint_jina',
+  }[selectedProvider]
 
   return (
     <Panel title={t('api_keys.endpoints_title')} description={description}>
@@ -100,7 +106,7 @@ export function ProxyEndpointsPanel({
         })}
       </div>
       <p className="api-key-hint">
-        {selectedProvider === 'jina' ? t('api_keys.endpoints_hint_jina') : t('api_keys.endpoints_hint')}
+        {t(authenticationHint)}
       </p>
     </Panel>
   )

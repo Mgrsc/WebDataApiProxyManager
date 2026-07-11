@@ -16,6 +16,9 @@ export function ProviderAccountRow({
   editingId,
   editName,
   editBaseUrl,
+  editReaderBaseUrl,
+  editSearchBaseUrl,
+  editApiKey,
   bindSelections,
   proxies,
   bindPending,
@@ -25,6 +28,9 @@ export function ProviderAccountRow({
   onToggleSelection,
   onEditNameChange,
   onEditBaseUrlChange,
+  onEditReaderBaseUrlChange,
+  onEditSearchBaseUrlChange,
+  onEditApiKeyChange,
   onBindSelectionChange,
   onBindAccount,
   onSaveEdit,
@@ -40,6 +46,9 @@ export function ProviderAccountRow({
   editingId: string | null
   editName: string
   editBaseUrl: string
+  editReaderBaseUrl: string
+  editSearchBaseUrl: string
+  editApiKey: string
   bindSelections: Record<string, string>
   proxies: EgressProxySummary[]
   bindPending: boolean
@@ -49,6 +58,9 @@ export function ProviderAccountRow({
   onToggleSelection: (accountId: string, checked: boolean) => void
   onEditNameChange: (value: string) => void
   onEditBaseUrlChange: (value: string) => void
+  onEditReaderBaseUrlChange: (value: string) => void
+  onEditSearchBaseUrlChange: (value: string) => void
+  onEditApiKeyChange: (value: string) => void
   onBindSelectionChange: (accountId: string, value: string) => void
   onBindAccount: (accountId: string) => void
   onSaveEdit: (accountId: string) => void
@@ -81,11 +93,20 @@ export function ProviderAccountRow({
               onChange={(event) => onEditNameChange(event.target.value)}
               placeholder={account.name}
             />
+            {account.provider === 'jina' ? (
+              <>
+                <input className="accounts-edit-subfield" value={editReaderBaseUrl} onChange={(event) => onEditReaderBaseUrlChange(event.target.value)} placeholder={t('accounts.reader_base_url')} />
+                <input className="accounts-edit-subfield" value={editSearchBaseUrl} onChange={(event) => onEditSearchBaseUrlChange(event.target.value)} placeholder={t('accounts.search_base_url')} />
+              </>
+            ) : (
+              <input className="accounts-edit-subfield" value={editBaseUrl} onChange={(event) => onEditBaseUrlChange(event.target.value)} placeholder={t('accounts.base_url_placeholder')} />
+            )}
             <input
               className="accounts-edit-subfield"
-              value={editBaseUrl}
-              onChange={(event) => onEditBaseUrlChange(event.target.value)}
-              placeholder={t('accounts.base_url_placeholder')}
+              type="password"
+              value={editApiKey}
+              onChange={(event) => onEditApiKeyChange(event.target.value)}
+              placeholder={t('accounts.replace_api_key')}
             />
           </div>
         ) : (

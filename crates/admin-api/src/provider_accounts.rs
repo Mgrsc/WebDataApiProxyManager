@@ -20,6 +20,11 @@ async fn create_provider_account(
         payload.api_key.as_str(),
         "provider account api key is required",
     )?;
+    validate_provider_urls(
+        payload.provider,
+        payload.reader_base_url.as_ref(),
+        payload.search_base_url.as_ref(),
+    )?;
     let account = ProviderAccount {
         id: payload
             .id
@@ -29,6 +34,8 @@ async fn create_provider_account(
         name,
         api_key,
         base_url: normalize_optional_text(payload.base_url),
+        reader_base_url: normalize_optional_text(payload.reader_base_url),
+        search_base_url: normalize_optional_text(payload.search_base_url),
         enabled: payload.enabled.unwrap_or(true),
         status: if payload.enabled.unwrap_or(true) {
             ProviderAccountStatus::Active
@@ -98,14 +105,43 @@ async fn update_provider_account(
         }
         None => None,
     };
+    let credential_changed = api_key.is_some();
     let base_url = if payload.clear_base_url.unwrap_or(false) {
         Some(None)
     } else {
         payload.base_url.map(normalize_text)
     };
+    let account = state
+        .storage
+        .find_provider_account(&account_id)
+        .await?
+        .ok_or_else(|| AdminApiError::NotFound(account_id.clone()))?;
+    validate_provider_urls(
+        account.provider,
+        payload.reader_base_url.as_ref(),
+        payload.search_base_url.as_ref(),
+    )?;
+    let reader_base_url = optional_text_update(
+        payload.reader_base_url,
+        payload.clear_reader_base_url.unwrap_or(false),
+    );
+    let search_base_url = optional_text_update(
+        payload.search_base_url,
+        payload.clear_search_base_url.unwrap_or(false),
+    );
     let updated = state
         .storage
-        .update_provider_account(&account_id, name, api_key, base_url, payload.enabled)
+        .update_provider_account(
+            &account_id,
+            ProviderAccountUpdate {
+                name,
+                api_key,
+                base_url,
+                reader_base_url,
+                search_base_url,
+                enabled: payload.enabled,
+            },
+        )
         .await?;
 
     if !updated {
@@ -127,7 +163,7 @@ async fn update_provider_account(
         "provider_account",
         Some(&account_id),
         None,
-        None,
+        credential_changed.then(|| serde_json::json!({"credential_changed": true})),
     )
     .await;
 
@@ -279,6 +315,29 @@ fn normalize_provider_account_api_key(
         }
     } else {
         Ok(value.to_owned())
+    }
+}
+
+fn validate_provider_urls(
+    provider: ProviderId,
+    reader_base_url: Option<&String>,
+    search_base_url: Option<&String>,
+) -> Result<(), AdminApiError> {
+    if provider != ProviderId::Jina
+        && (reader_base_url.is_some() || search_base_url.is_some())
+    {
+        return Err(AdminApiError::BadRequest(
+            "reader and search base urls are only supported for jina accounts".to_owned(),
+        ));
+    }
+    Ok(())
+}
+
+fn optional_text_update(value: Option<String>, clear: bool) -> Option<Option<String>> {
+    if clear {
+        Some(None)
+    } else {
+        value.map(normalize_text)
     }
 }
 

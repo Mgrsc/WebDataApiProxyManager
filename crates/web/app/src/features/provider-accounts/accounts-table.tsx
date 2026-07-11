@@ -20,6 +20,9 @@ export function AccountsPanel({
   editingId,
   editName,
   editBaseUrl,
+  editReaderBaseUrl,
+  editSearchBaseUrl,
+  editApiKey,
   bindPending,
   bulkPending,
   updatePending,
@@ -36,6 +39,9 @@ export function AccountsPanel({
   onRunBulkAction,
   onEditNameChange,
   onEditBaseUrlChange,
+  onEditReaderBaseUrlChange,
+  onEditSearchBaseUrlChange,
+  onEditApiKeyChange,
   onBindSelectionChange,
   onBindAccount,
   onSaveEdit,
@@ -60,6 +66,9 @@ export function AccountsPanel({
   editingId: string | null
   editName: string
   editBaseUrl: string
+  editReaderBaseUrl: string
+  editSearchBaseUrl: string
+  editApiKey: string
   bindPending: boolean
   bulkPending: boolean
   updatePending: boolean
@@ -76,6 +85,9 @@ export function AccountsPanel({
   onRunBulkAction: (action: AccountBulkAction) => void
   onEditNameChange: (value: string) => void
   onEditBaseUrlChange: (value: string) => void
+  onEditReaderBaseUrlChange: (value: string) => void
+  onEditSearchBaseUrlChange: (value: string) => void
+  onEditApiKeyChange: (value: string) => void
   onBindSelectionChange: (accountId: string, value: string) => void
   onBindAccount: (accountId: string) => void
   onSaveEdit: (accountId: string) => void
@@ -150,6 +162,9 @@ export function AccountsPanel({
                   editingId={editingId}
                   editName={editName}
                   editBaseUrl={editBaseUrl}
+                  editReaderBaseUrl={editReaderBaseUrl}
+                  editSearchBaseUrl={editSearchBaseUrl}
+                  editApiKey={editApiKey}
                   bindSelections={bindSelections}
                   proxies={proxies}
                   bindPending={bindPending}
@@ -159,6 +174,9 @@ export function AccountsPanel({
                   onToggleSelection={onToggleSelection}
                   onEditNameChange={onEditNameChange}
                   onEditBaseUrlChange={onEditBaseUrlChange}
+                  onEditReaderBaseUrlChange={onEditReaderBaseUrlChange}
+                  onEditSearchBaseUrlChange={onEditSearchBaseUrlChange}
+                  onEditApiKeyChange={onEditApiKeyChange}
                   onBindSelectionChange={onBindSelectionChange}
                   onBindAccount={onBindAccount}
                   onSaveEdit={onSaveEdit}

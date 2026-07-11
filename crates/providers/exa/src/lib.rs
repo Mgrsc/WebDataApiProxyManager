@@ -46,6 +46,7 @@ impl ProviderAdapter for ExaAdapter {
                 name: "x-api-key".to_owned(),
                 value: account.api_key.clone(),
             },
+            body_override: None,
         })
     }
 

@@ -76,6 +76,8 @@ pub struct ProviderAccount {
     pub name: String,
     pub api_key: String,
     pub base_url: Option<String>,
+    pub reader_base_url: Option<String>,
+    pub search_base_url: Option<String>,
     pub enabled: bool,
     pub status: ProviderAccountStatus,
     pub last_error: Option<String>,
@@ -134,6 +136,8 @@ pub struct ProviderAccountSummary {
     pub provider: ProviderId,
     pub name: String,
     pub base_url: Option<String>,
+    pub reader_base_url: Option<String>,
+    pub search_base_url: Option<String>,
     pub enabled: bool,
     pub status: ProviderAccountStatus,
     pub last_error: Option<String>,
@@ -144,6 +148,16 @@ pub struct ProviderAccountSummary {
     pub weight: i64,
     pub created_at: String,
     pub updated_at: String,
+}
+
+#[derive(Clone, Debug, Default)]
+pub struct ProviderAccountUpdate {
+    pub name: Option<String>,
+    pub api_key: Option<String>,
+    pub base_url: Option<Option<String>>,
+    pub reader_base_url: Option<Option<String>>,
+    pub search_base_url: Option<Option<String>>,
+    pub enabled: Option<bool>,
 }
 
 #[derive(Clone, Debug, Deserialize, Serialize)]
@@ -366,6 +380,7 @@ pub struct UpstreamRequestPlan {
     pub provider: ProviderId,
     pub url: String,
     pub auth: ProviderAuth,
+    pub body_override: Option<Vec<u8>>,
 }
 
 #[derive(Clone, Copy, Debug, Deserialize, Eq, PartialEq, Serialize)]

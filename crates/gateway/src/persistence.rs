@@ -257,6 +257,7 @@ fn classify_gateway_failure(error: &GatewayError) -> &'static str {
         GatewayError::ProviderUnavailable(_) => "provider_unavailable",
         GatewayError::MissingAuthorization
         | GatewayError::InvalidAuthorization
+        | GatewayError::AmbiguousAuthorization
         | GatewayError::InvalidPlatformKey
         | GatewayError::QuotaExceeded => "request",
     }

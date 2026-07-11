@@ -18,9 +18,9 @@ use tracing::info;
 use wdapm_core::{
     AccountHealthReport, AdminAuditLogInsert, AdminAuditLogRecord, AlertEventRecord, AlertRuleKind,
     AlertRuleRecord, EgressProxy, EgressProxyKind, EgressProxyStatus, EgressProxySummary,
-    ProviderAccount, ProviderAccountStatus, ProviderAccountSummary, ProviderAsyncJobInsert,
-    ProviderAsyncJobRecord, ProviderAsyncJobState, ProviderAsyncJobUpdate, ProviderError,
-    ProviderId, ProviderRequestReport, RequestLogInsert, RequestLogRecord,
+    ProviderAccount, ProviderAccountStatus, ProviderAccountSummary, ProviderAccountUpdate,
+    ProviderAsyncJobInsert, ProviderAsyncJobRecord, ProviderAsyncJobState, ProviderAsyncJobUpdate,
+    ProviderError, ProviderId, ProviderRequestReport, RequestLogInsert, RequestLogRecord,
 };
 
 mod alerts;
@@ -198,6 +198,7 @@ impl StorageService {
                 accounts.provider_id,
                 accounts.name,
                 accounts.base_url,
+                accounts.config,
                 accounts.enabled,
                 accounts.status,
                 accounts.last_error,
@@ -234,6 +235,7 @@ impl StorageService {
                     provider_id,
                     name,
                     base_url,
+                    config,
                     enabled,
                     status,
                     last_error,
@@ -260,6 +262,7 @@ impl StorageService {
                     provider_id,
                     name,
                     base_url,
+                    config,
                     enabled,
                     status,
                     last_error,
@@ -292,6 +295,7 @@ impl StorageService {
                 accounts.provider_id,
                 accounts.name,
                 accounts.base_url,
+                accounts.config,
                 accounts.enabled,
                 accounts.status,
                 accounts.last_error,
@@ -339,6 +343,7 @@ impl StorageService {
                 name,
                 enabled,
                 base_url,
+                config,
                 status,
                 last_error,
                 cooldown_until,
@@ -347,7 +352,7 @@ impl StorageService {
                 last_status_code,
                 weight,
                 updated_at
-            ) values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, current_timestamp)
+            ) values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, current_timestamp)
             "#,
         )
         .bind(&account.id)
@@ -355,6 +360,10 @@ impl StorageService {
         .bind(&account.name)
         .bind(bool_to_int(account.enabled))
         .bind(account.base_url.as_deref())
+        .bind(provider_account_config_json(
+            account.reader_base_url.as_deref(),
+            account.search_base_url.as_deref(),
+        )?)
         .bind(account.status.as_str())
         .bind(account.last_error.as_deref())
         .bind(account.cooldown_until.as_deref())
@@ -391,26 +400,25 @@ impl StorageService {
     pub async fn update_provider_account(
         &self,
         account_id: &str,
-        name: Option<String>,
-        api_key: Option<String>,
-        base_url: Option<Option<String>>,
-        enabled: Option<bool>,
+        update: ProviderAccountUpdate,
     ) -> Result<bool, StorageError> {
         let Some(existing) = self.find_provider_account(account_id).await? else {
             return Ok(false);
         };
 
-        let next_name = name.unwrap_or(existing.name);
-        let next_api_key = api_key.unwrap_or(existing.api_key);
+        let next_name = update.name.unwrap_or(existing.name);
+        let next_api_key = update.api_key.unwrap_or(existing.api_key);
         let encrypted_api_key = encrypt_credential(&next_api_key, &self.master_key);
-        let next_base_url = base_url.unwrap_or(existing.base_url);
-        let next_enabled = enabled.unwrap_or(existing.enabled);
-        let next_status = match enabled {
+        let next_base_url = update.base_url.unwrap_or(existing.base_url);
+        let next_reader_base_url = update.reader_base_url.unwrap_or(existing.reader_base_url);
+        let next_search_base_url = update.search_base_url.unwrap_or(existing.search_base_url);
+        let next_enabled = update.enabled.unwrap_or(existing.enabled);
+        let next_status = match update.enabled {
             Some(true) => ProviderAccountStatus::Active,
             Some(false) => ProviderAccountStatus::Disabled,
             None => existing.status,
         };
-        let next_cooldown_until = match enabled {
+        let next_cooldown_until = match update.enabled {
             Some(_) => None,
             None => existing.cooldown_until,
         };
@@ -423,6 +431,7 @@ impl StorageService {
                 name = ?,
                 enabled = ?,
                 base_url = ?,
+                config = ?,
                 status = ?,
                 cooldown_until = ?,
                 updated_at = current_timestamp
@@ -432,6 +441,10 @@ impl StorageService {
         .bind(&next_name)
         .bind(bool_to_int(next_enabled))
         .bind(next_base_url.as_deref())
+        .bind(provider_account_config_json(
+            next_reader_base_url.as_deref(),
+            next_search_base_url.as_deref(),
+        )?)
         .bind(next_status.as_str())
         .bind(next_cooldown_until.as_deref())
         .bind(account_id)
@@ -2313,12 +2326,15 @@ fn map_provider_account(
 ) -> Result<ProviderAccount, StorageError> {
     let raw_api_key: String = row.try_get("encrypted_api_key")?;
     let api_key = decrypt_credential(&raw_api_key, master_key)?;
+    let (reader_base_url, search_base_url) = parse_provider_account_config(&row)?;
     Ok(ProviderAccount {
         id: row.try_get("id")?,
         provider: ProviderId::from_str(row.try_get::<String, _>("provider_id")?.as_str())?,
         name: row.try_get("name")?,
         api_key,
         base_url: row.try_get("base_url")?,
+        reader_base_url,
+        search_base_url,
         enabled: int_to_bool(row.try_get::<i64, _>("enabled")?),
         status: ProviderAccountStatus::from_str(row.try_get::<String, _>("status")?.as_str())?,
         last_error: row.try_get("last_error")?,
@@ -2334,11 +2350,14 @@ fn map_provider_account(
 fn map_provider_account_summary(
     row: sqlx::sqlite::SqliteRow,
 ) -> Result<ProviderAccountSummary, StorageError> {
+    let (reader_base_url, search_base_url) = parse_provider_account_config(&row)?;
     Ok(ProviderAccountSummary {
         id: row.try_get("id")?,
         provider: ProviderId::from_str(row.try_get::<String, _>("provider_id")?.as_str())?,
         name: row.try_get("name")?,
         base_url: row.try_get("base_url")?,
+        reader_base_url,
+        search_base_url,
         enabled: int_to_bool(row.try_get::<i64, _>("enabled")?),
         status: ProviderAccountStatus::from_str(row.try_get::<String, _>("status")?.as_str())?,
         last_error: row.try_get("last_error")?,
@@ -2350,6 +2369,34 @@ fn map_provider_account_summary(
         created_at: row.try_get("created_at")?,
         updated_at: row.try_get("updated_at")?,
     })
+}
+
+fn provider_account_config_json(
+    reader_base_url: Option<&str>,
+    search_base_url: Option<&str>,
+) -> Result<String, StorageError> {
+    serde_json::to_string(&serde_json::json!({
+        "reader_base_url": reader_base_url,
+        "search_base_url": search_base_url,
+    }))
+    .map_err(StorageError::Json)
+}
+
+fn parse_provider_account_config(
+    row: &sqlx::sqlite::SqliteRow,
+) -> Result<(Option<String>, Option<String>), StorageError> {
+    let config: serde_json::Value =
+        serde_json::from_str(row.try_get::<String, _>("config")?.as_str())?;
+    Ok((
+        config
+            .get("reader_base_url")
+            .and_then(serde_json::Value::as_str)
+            .map(str::to_owned),
+        config
+            .get("search_base_url")
+            .and_then(serde_json::Value::as_str)
+            .map(str::to_owned),
+    ))
 }
 
 fn map_egress_proxy(row: sqlx::sqlite::SqliteRow) -> Result<EgressProxy, StorageError> {

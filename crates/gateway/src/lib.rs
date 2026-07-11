@@ -278,10 +278,12 @@ async fn proxy_request(
     uri: Uri,
     body: Bytes,
 ) -> Result<Response, GatewayError> {
-    let platform_api_key = authorize(&headers, &state.storage).await?;
-    let start = Instant::now();
-
     let provider_id = ProviderId::from_str(provider.as_str())?;
+    let extracted = extract_platform_credential(provider_id, headers, body)?;
+    let platform_api_key = authorize(&extracted.token, &state.storage).await?;
+    let headers = extracted.headers;
+    let body = extracted.body;
+    let start = Instant::now();
     let adapter = state
         .provider_registry
         .resolve(provider_id)
@@ -753,6 +755,8 @@ mod tests {
             name: id.to_owned(),
             api_key: api_key.to_owned(),
             base_url: None,
+            reader_base_url: None,
+            search_base_url: None,
             enabled: true,
             status: ProviderAccountStatus::Active,
             last_error: None,
@@ -895,6 +899,11 @@ async fn forward_request(
         ProviderAuth::None => builder,
     };
 
+    let body = plan
+        .body_override
+        .as_deref()
+        .map(Bytes::copy_from_slice)
+        .unwrap_or(body);
     if !body.is_empty() {
         builder = builder.body(body);
     }
@@ -987,6 +996,8 @@ pub enum GatewayError {
     MissingAuthorization,
     #[error("platform authorization header is invalid")]
     InvalidAuthorization,
+    #[error("conflicting platform credentials")]
+    AmbiguousAuthorization,
     #[error("platform api key is invalid")]
     InvalidPlatformKey,
     #[error("api key quota exceeded")]
@@ -1015,6 +1026,7 @@ impl IntoResponse for GatewayError {
             Self::MissingAuthorization | Self::InvalidAuthorization | Self::InvalidPlatformKey => {
                 (StatusCode::UNAUTHORIZED, self.to_string())
             }
+            Self::AmbiguousAuthorization => (StatusCode::BAD_REQUEST, self.to_string()),
             Self::QuotaExceeded => (StatusCode::TOO_MANY_REQUESTS, self.to_string()),
             Self::ProviderUnavailable(_) => (StatusCode::SERVICE_UNAVAILABLE, self.to_string()),
             Self::Scheduler(_) => {

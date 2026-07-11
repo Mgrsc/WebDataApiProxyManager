@@ -2927,6 +2927,8 @@ name = "wdapm-provider-jina"
 version = "0.1.0"
 dependencies = [
  "serde_json",
+ "time",
+ "uuid",
  "wdapm-core",
 ]
 
@@ -2934,6 +2936,9 @@ dependencies = [
 name = "wdapm-provider-tavily"
 version = "0.1.0"
 dependencies = [
+ "serde_json",
+ "time",
+ "uuid",
  "wdapm-core",
 ]
 

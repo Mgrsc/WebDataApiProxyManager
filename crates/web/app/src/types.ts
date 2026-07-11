@@ -18,6 +18,8 @@ export type ProviderAccountSummary = {
   provider: ProviderId
   name: string
   base_url: string | null
+  reader_base_url: string | null
+  search_base_url: string | null
   enabled: boolean
   status: ProviderAccountStatus
   last_error: string | null

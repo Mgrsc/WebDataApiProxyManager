@@ -102,6 +102,19 @@ Simply replace the original upstream Base URL with the WDAPM service address and
 * Proxy Jina Reader: `/jina/r/...`
 * Proxy Jina Search: `/jina/s/...`
 
+### Client Authentication Compatibility
+
+WDAPM accepts the provider's native client credential format and treats the supplied value as a Platform API Key. It removes that credential before forwarding the request and injects the selected upstream account credential instead.
+
+| Provider | Accepted client credential |
+| --- | --- |
+| Exa | `Authorization: Bearer <platform-key>` or `x-api-key: <platform-key>` |
+| Tavily | `Authorization: Bearer <platform-key>` or top-level JSON `api_key` |
+| Firecrawl | `Authorization: Bearer <platform-key>` |
+| Jina | `Authorization: Bearer <platform-key>` |
+
+Conflicting credential values are rejected. Credentials in URL query parameters are not supported. WDAPM authentication is still required when the selected upstream route supports keyless access.
+
 ### Jina Route Mapping
 
 Jina is handled slightly differently from providers such as Exa or Tavily. WDAPM maps Jina's upstream host prefix into the route path:
@@ -128,6 +141,8 @@ http://<Your-Server-IP>:8080/jina/s/http://example.com
 ```
 
 > Note: Jina routes must start with `r/` or `s/`. Requests like `/jina/...` without that prefix are invalid.
+
+Jina accounts can configure separate Reader and Search Base URLs. This allows `/jina/r/...` and `/jina/s/...` to use different reverse proxies while retaining the official defaults when either field is empty.
 
 ---
 

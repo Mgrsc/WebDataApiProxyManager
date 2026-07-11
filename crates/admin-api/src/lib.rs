@@ -21,9 +21,9 @@ use wdapm_core::{
     AccountHealthReport, AdminAuditLogInsert, AdminAuditLogRecord, AlertEventRecord,
     AlertRuleInsert, AlertRuleKind, AlertRuleRecord, EgressProxy, EgressProxyKind,
     EgressProxyStatus, EgressProxySummary, PlatformApiKeyRecord, ProviderAccount,
-    ProviderAccountStatus, ProviderAccountSummary, ProviderAsyncJobRecord, ProviderAsyncJobState,
-    ProviderId, ProviderRequestReport, RequestLogRecord, hash_token, parse_sqlite_timestamp,
-    sqlite_timestamp,
+    ProviderAccountStatus, ProviderAccountSummary, ProviderAccountUpdate, ProviderAsyncJobRecord,
+    ProviderAsyncJobState, ProviderId, ProviderRequestReport, RequestLogRecord, hash_token,
+    parse_sqlite_timestamp, sqlite_timestamp,
 };
 use wdapm_storage::{PlatformApiKeyInsert, StorageError, StorageService};
 use wdapm_worker::{EgressProxyTestResult, ReconcileReport, WorkerError, WorkerService};
@@ -676,6 +676,8 @@ struct CreateProviderAccountRequest {
     name: String,
     api_key: String,
     base_url: Option<String>,
+    reader_base_url: Option<String>,
+    search_base_url: Option<String>,
     enabled: Option<bool>,
 }
 
@@ -685,6 +687,10 @@ struct UpdateProviderAccountRequest {
     api_key: Option<String>,
     base_url: Option<String>,
     clear_base_url: Option<bool>,
+    reader_base_url: Option<String>,
+    clear_reader_base_url: Option<bool>,
+    search_base_url: Option<String>,
+    clear_search_base_url: Option<bool>,
     enabled: Option<bool>,
 }
 

@@ -12,6 +12,8 @@ export function CreateAccountDrawer({
   apiKeyInput,
   batchApiKeysInput,
   baseUrl,
+  readerBaseUrl,
+  searchBaseUrl,
   batchApiKeysLength,
   detectedBatchCount,
   unknownBatchCount,
@@ -24,6 +26,8 @@ export function CreateAccountDrawer({
   onApiKeyChange,
   onBatchApiKeysChange,
   onBaseUrlChange,
+  onReaderBaseUrlChange,
+  onSearchBaseUrlChange,
   onCreate,
   onBulkCreate,
   t,
@@ -37,6 +41,8 @@ export function CreateAccountDrawer({
   apiKeyInput: string
   batchApiKeysInput: string
   baseUrl: string
+  readerBaseUrl: string
+  searchBaseUrl: string
   batchApiKeysLength: number
   detectedBatchCount: number
   unknownBatchCount: number
@@ -49,6 +55,8 @@ export function CreateAccountDrawer({
   onApiKeyChange: (value: string) => void
   onBatchApiKeysChange: (value: string) => void
   onBaseUrlChange: (value: string) => void
+  onReaderBaseUrlChange: (value: string) => void
+  onSearchBaseUrlChange: (value: string) => void
   onCreate: () => void
   onBulkCreate: () => void
   t: (key: string, values?: Record<string, string | number>) => string
@@ -113,11 +121,24 @@ export function CreateAccountDrawer({
               : t('accounts.batch_hint')}
           </p>
         </label>
-        <label className="field">
-          <span>{t('accounts.base_url_optional')}</span>
-          <input value={baseUrl} onChange={(event) => onBaseUrlChange(event.target.value)} placeholder={defaultBaseUrl} />
-          <p className="field-note">{t('accounts.base_url_default', { url: defaultBaseUrl })}</p>
-        </label>
+        {provider === 'jina' ? (
+          <>
+            <label className="field">
+              <span>{t('accounts.reader_base_url')}</span>
+              <input value={readerBaseUrl} onChange={(event) => onReaderBaseUrlChange(event.target.value)} placeholder="https://r.jina.ai" />
+            </label>
+            <label className="field">
+              <span>{t('accounts.search_base_url')}</span>
+              <input value={searchBaseUrl} onChange={(event) => onSearchBaseUrlChange(event.target.value)} placeholder="https://s.jina.ai" />
+            </label>
+          </>
+        ) : (
+          <label className="field">
+            <span>{t('accounts.base_url_optional')}</span>
+            <input value={baseUrl} onChange={(event) => onBaseUrlChange(event.target.value)} placeholder={defaultBaseUrl} />
+            <p className="field-note">{t('accounts.base_url_default', { url: defaultBaseUrl })}</p>
+          </label>
+        )}
         {createError ? <ErrorBanner message={createError} /> : null}
         {bulkError ? <ErrorBanner message={bulkError} /> : null}
         <button

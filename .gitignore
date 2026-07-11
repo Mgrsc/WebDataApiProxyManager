@@ -13,6 +13,7 @@ target/
 archive/
 
 dev/
+.dev/
 
 crates/web/app/node_modules/
 crates/web/app/dist/

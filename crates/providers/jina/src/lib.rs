@@ -63,6 +63,18 @@ impl ProviderAdapter for JinaAdapter {
         let base_url = route
             .base_url_override
             .as_deref()
+            .map(|route_base_url| match route_base_url {
+                JINA_READER_BASE_URL => account
+                    .reader_base_url
+                    .as_deref()
+                    .or(account.base_url.as_deref())
+                    .unwrap_or(JINA_READER_BASE_URL),
+                JINA_SEARCH_BASE_URL => account
+                    .search_base_url
+                    .as_deref()
+                    .unwrap_or(JINA_SEARCH_BASE_URL),
+                _ => route_base_url,
+            })
             .unwrap_or(account.base_url());
         let auth = if account.api_key.is_empty() {
             ProviderAuth::None
@@ -74,6 +86,7 @@ impl ProviderAdapter for JinaAdapter {
             provider: ProviderId::Jina,
             url: join_url(base_url, &route.upstream_path, route.query.as_deref()),
             auth,
+            body_override: None,
         })
     }
 
@@ -130,6 +143,41 @@ mod tests {
         assert!(adapter.supports_account_for_route(&route, &account));
     }
 
+    #[test]
+    fn uses_account_specific_reader_and_search_urls() {
+        let adapter = JinaAdapter;
+        let mut account = provider_account("jina_test");
+        account.reader_base_url = Some("https://reader.example.com".to_owned());
+        account.search_base_url = Some("https://search.example.com".to_owned());
+        let request = RequestEnvelope {
+            request_id: uuid::Uuid::nil(),
+            method: "GET".to_owned(),
+            rest_path: String::new(),
+            query: None,
+            headers: wdapm_core::HeaderValues::new(),
+            body: Vec::new(),
+            received_at: time::OffsetDateTime::UNIX_EPOCH,
+        };
+
+        let reader = adapter.parse_route("r/https://example.com", None).unwrap();
+        let search = adapter.parse_route("s/search", Some("q=test")).unwrap();
+
+        assert!(
+            adapter
+                .build_upstream_request(&request, &reader, &account)
+                .unwrap()
+                .url
+                .starts_with("https://reader.example.com/")
+        );
+        assert!(
+            adapter
+                .build_upstream_request(&request, &search, &account)
+                .unwrap()
+                .url
+                .starts_with("https://search.example.com/")
+        );
+    }
+
     fn provider_account(api_key: &str) -> ProviderAccount {
         ProviderAccount {
             id: "jina-test".to_owned(),
@@ -137,6 +185,8 @@ mod tests {
             name: "Jina Test".to_owned(),
             api_key: api_key.to_owned(),
             base_url: None,
+            reader_base_url: None,
+            search_base_url: None,
             enabled: true,
             status: ProviderAccountStatus::Active,
             last_error: None,

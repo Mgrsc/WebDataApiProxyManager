@@ -37,6 +37,8 @@ export function ProviderAccountsPage() {
         apiKeyInput={state.apiKeyInput}
         batchApiKeysInput={state.batchApiKeysInput}
         baseUrl={state.baseUrl}
+        readerBaseUrl={state.readerBaseUrl}
+        searchBaseUrl={state.searchBaseUrl}
         batchApiKeysLength={state.batchApiKeys.length}
         detectedBatchCount={state.detectedBatchCount}
         unknownBatchCount={state.unknownBatchCount}
@@ -49,6 +51,8 @@ export function ProviderAccountsPage() {
         onApiKeyChange={state.handleApiKeyChange}
         onBatchApiKeysChange={state.setBatchApiKeysInput}
         onBaseUrlChange={state.setBaseUrl}
+        onReaderBaseUrlChange={state.setReaderBaseUrl}
+        onSearchBaseUrlChange={state.setSearchBaseUrl}
         onCreate={state.onCreate}
         onBulkCreate={state.onBulkCreate}
         t={state.t}
@@ -72,6 +76,9 @@ export function ProviderAccountsPage() {
         editingId={state.editingId}
         editName={state.editName}
         editBaseUrl={state.editBaseUrl}
+        editReaderBaseUrl={state.editReaderBaseUrl}
+        editSearchBaseUrl={state.editSearchBaseUrl}
+        editApiKey={state.editApiKey}
         bindPending={state.bindMutation.isPending}
         bulkPending={state.bulkMutation.isPending}
         updatePending={state.updateMutation.isPending}
@@ -92,6 +99,9 @@ export function ProviderAccountsPage() {
         onRunBulkAction={state.runBulkAction}
         onEditNameChange={state.setEditName}
         onEditBaseUrlChange={state.setEditBaseUrl}
+        onEditReaderBaseUrlChange={state.setEditReaderBaseUrl}
+        onEditSearchBaseUrlChange={state.setEditSearchBaseUrl}
+        onEditApiKeyChange={state.setEditApiKey}
         onBindSelectionChange={state.handleBindSelectionChange}
         onBindAccount={state.handleBindAccount}
         onSaveEdit={state.onSaveEdit}

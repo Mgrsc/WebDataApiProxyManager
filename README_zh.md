@@ -98,6 +98,19 @@ http://<你的服务器IP>:8080
 * 代理 Jina Reader： `/jina/r/...`
 * 代理 Jina Search： `/jina/s/...`
 
+### 客户端鉴权兼容
+
+WDAPM 接受各 Provider 客户端的原生凭据格式，并将其中的值作为平台 API Key。请求转发前会移除该凭据，再注入调度选中的上游账号凭据。
+
+| Provider | 支持的客户端凭据 |
+| --- | --- |
+| Exa | `Authorization: Bearer <platform-key>` 或 `x-api-key: <platform-key>` |
+| Tavily | `Authorization: Bearer <platform-key>` 或 JSON 顶层 `api_key` |
+| Firecrawl | `Authorization: Bearer <platform-key>` |
+| Jina | `Authorization: Bearer <platform-key>` |
+
+如果多个凭据的值冲突，请求会被拒绝。不支持通过 URL 查询参数传递凭据。即使选中的上游路由支持免 Key 调用，访问 WDAPM 仍然需要完成平台鉴权。
+
 ### Jina 路由映射说明
 
 Jina 的接入方式和 Exa、Tavily 这类常规 API 略有不同。WDAPM 会把 Jina 上游域名里的前缀映射到路径中：
@@ -124,6 +137,8 @@ http://<你的服务器IP>:8080/jina/s/http://example.com
 ```
 
 > 注意：Jina 路由必须以 `r/` 或 `s/` 开头，像 `/jina/...` 这种未带前缀的写法是无效的。
+
+Jina 账号可以分别配置 Reader 和 Search 基础 URL，使 `/jina/r/...` 与 `/jina/s/...` 使用不同反向代理；对应字段留空时使用官方默认地址。
 
 ---
 

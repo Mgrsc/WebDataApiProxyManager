@@ -54,8 +54,10 @@ export const operationsMessages = {
   'api_keys.endpoints_desc': { en: 'Copy the full proxy URL directly. Current domain: {origin}', zh: '可直接复制完整代理地址。当前域名：{origin}' },
   'api_keys.endpoints_desc_fallback': { en: 'Copy the full proxy URL directly. The current domain will be detected in the browser.', zh: '可直接复制完整代理地址。当前域名会在浏览器中自动识别。' },
   'api_keys.provider_label': { en: 'Provider', zh: '提供商' },
-  'api_keys.endpoints_hint': { en: 'Send requests to these URLs with your Platform API Key in the headers.', zh: '请求这些地址时，在请求头中携带平台 API Key。' },
-  'api_keys.endpoints_hint_jina': { en: 'Jina must use /jina/r or /jina/s. Append the target URL after that prefix.', zh: 'Jina 必须使用 /jina/r 或 /jina/s，并在该前缀后继续拼接目标 URL。' },
+  'api_keys.endpoints_hint_exa': { en: 'Use Authorization: Bearer or x-api-key with your Platform API Key.', zh: '使用 Authorization: Bearer 或 x-api-key 携带平台 API Key。' },
+  'api_keys.endpoints_hint_tavily': { en: 'Use Authorization: Bearer or the JSON api_key field with your Platform API Key.', zh: '使用 Authorization: Bearer 或 JSON api_key 字段携带平台 API Key。' },
+  'api_keys.endpoints_hint_bearer': { en: 'Use Authorization: Bearer with your Platform API Key.', zh: '使用 Authorization: Bearer 携带平台 API Key。' },
+  'api_keys.endpoints_hint_jina': { en: 'Use Authorization: Bearer. Jina routes must continue with /jina/r or /jina/s.', zh: '使用 Authorization: Bearer。Jina 路由必须继续使用 /jina/r 或 /jina/s。' },
   'api_keys.no_keys': { en: 'No API Keys', zh: '无 API 密钥' },
   'api_keys.no_keys_desc': { en: 'Click the button above to create the first Platform API Key.', zh: '点击右上角按钮创建第一个平台 API 密钥。' },
 } satisfies Record<string, { en: string; zh: string }>

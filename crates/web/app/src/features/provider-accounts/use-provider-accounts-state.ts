@@ -10,6 +10,8 @@ export function useProviderAccountsState(accounts: ProviderAccountSummary[] | un
   const [apiKeyInput, setApiKeyInput] = useState('')
   const [batchApiKeysInput, setBatchApiKeysInput] = useState('')
   const [baseUrl, setBaseUrl] = useState('')
+  const [readerBaseUrl, setReaderBaseUrl] = useState('')
+  const [searchBaseUrl, setSearchBaseUrl] = useState('')
   const [bindSelections, setBindSelections] = useState<Record<string, string>>({})
   const [providerFilter, setProviderFilter] = useState<ProviderFilter>('all')
   const [selectedIds, setSelectedIds] = useState<string[]>([])
@@ -18,6 +20,9 @@ export function useProviderAccountsState(accounts: ProviderAccountSummary[] | un
   const [editingId, setEditingId] = useState<string | null>(null)
   const [editName, setEditName] = useState('')
   const [editBaseUrl, setEditBaseUrl] = useState('')
+  const [editReaderBaseUrl, setEditReaderBaseUrl] = useState('')
+  const [editSearchBaseUrl, setEditSearchBaseUrl] = useState('')
+  const [editApiKey, setEditApiKey] = useState('')
   const detectedProvider = detectProviderFromApiKey(apiKeyInput)
   const providerAutoDetected = detectedProvider !== null
   const batchApiKeys = parseBatchApiKeys(batchApiKeysInput)
@@ -50,6 +55,8 @@ export function useProviderAccountsState(accounts: ProviderAccountSummary[] | un
     setApiKeyInput('')
     setBatchApiKeysInput('')
     setBaseUrl('')
+    setReaderBaseUrl('')
+    setSearchBaseUrl('')
     setDrawerOpen(false)
   }
 
@@ -57,6 +64,9 @@ export function useProviderAccountsState(accounts: ProviderAccountSummary[] | un
     setEditingId(null)
     setEditName('')
     setEditBaseUrl('')
+    setEditReaderBaseUrl('')
+    setEditSearchBaseUrl('')
+    setEditApiKey('')
   }
 
   const toggleSelection = (accountId: string, checked: boolean) => {
@@ -99,6 +109,8 @@ export function useProviderAccountsState(accounts: ProviderAccountSummary[] | un
     setEditingId(account.id)
     setEditName(account.name)
     setEditBaseUrl(account.base_url ?? '')
+    setEditReaderBaseUrl(account.reader_base_url ?? account.base_url ?? '')
+    setEditSearchBaseUrl(account.search_base_url ?? '')
   }
 
   return {
@@ -108,6 +120,8 @@ export function useProviderAccountsState(accounts: ProviderAccountSummary[] | un
     apiKeyInput,
     batchApiKeysInput,
     baseUrl,
+    readerBaseUrl,
+    searchBaseUrl,
     bindSelections,
     providerFilter,
     selectedIds,
@@ -116,6 +130,9 @@ export function useProviderAccountsState(accounts: ProviderAccountSummary[] | un
     editingId,
     editName,
     editBaseUrl,
+    editReaderBaseUrl,
+    editSearchBaseUrl,
+    editApiKey,
     providerAutoDetected,
     detectedProvider,
     batchApiKeys,
@@ -128,11 +145,16 @@ export function useProviderAccountsState(accounts: ProviderAccountSummary[] | un
     setName,
     setBatchApiKeysInput,
     setBaseUrl,
+    setReaderBaseUrl,
+    setSearchBaseUrl,
     setSelectedIds,
     setBulkProxyId,
     setSortMode,
     setEditName,
     setEditBaseUrl,
+    setEditReaderBaseUrl,
+    setEditSearchBaseUrl,
+    setEditApiKey,
     resetCreateForm,
     resetEditForm,
     toggleSelection,
